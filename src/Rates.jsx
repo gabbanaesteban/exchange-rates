@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { Table, Thead, Tbody, Tr, Th, Td, TableCaption } from "@chakra-ui/react"
+import { Table, Thead, Tbody, Tr, Th, Td } from "@chakra-ui/react"
 
 function Rates({ currencies, selectedCurrency, token, ...props }) {
   const [rates, setRates] = useState([])

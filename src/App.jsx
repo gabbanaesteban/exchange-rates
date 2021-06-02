@@ -1,19 +1,13 @@
 import React, { useState } from "react"
 import { Flex, Heading, Box, Center } from "@chakra-ui/layout"
-import {
-  Editable,
-  EditableInput,
-  EditablePreview,
-  Select,
-  Text,
-  Link,
-} from "@chakra-ui/react"
+import { Select, Text, Link, Input, Stack } from "@chakra-ui/react"
+import debounce from "lodash.debounce"
 import Rates from "./Rates"
 
-function App() {
+function App({ defaultToken = "ffcb4ef5345fa3d95fcf9a08" }) {
   const currencies = ["USD", "EUR", "DOP", "BRL", "PEN", "ARS"]
   const [currency, setCurrency] = useState("USD")
-  const [token, setToken] = useState(undefined)
+  const [token, setToken] = useState(defaultToken)
 
   return (
     <Flex height="100vh" alignItems="center" justifyContent="center">
@@ -23,38 +17,28 @@ function App() {
             Exchange Rates
           </Heading>
         </Center>
-        <Editable
-          mb="3"
-          textAlign="center"
-          defaultValue="Click to enter your API key"
-          onSubmit={(value) => setToken(value)}
-        >
-          <EditablePreview />
-          <EditableInput />
-        </Editable>
-        <Select
-          mb="3"
-          textAlign="center"
-          defaultValue={currency}
-          onChange={(e) => setCurrency(e.target.value)}
-        >
-          {currencies.map((currency) => {
-            return (
-              <option key={currency} value={currency}>
-                {currency}
-              </option>
-            )
-          })}
-        </Select>
-        <Rates
-          currencies={currencies}
-          selectedCurrency={currency}
-          token={token}
-        />
+        <Stack spacing={2}>
+          <Input
+          placeholder="API Key"
+          isInvalid={!token}
+          defaultValue={defaultToken}
+          onChange={debounce((e) => setToken(e.target.value), 500)}
+          />
+          <Select mb="3" textAlign="center" defaultValue={currency} onChange={(e) => setCurrency(e.target.value)}>
+            {currencies.map((currency) => {
+              return (
+                <option key={currency} value={currency}>
+                  {currency}
+                </option>
+              )
+            })}
+          </Select>
+        </Stack>
+        <Rates currencies={currencies} selectedCurrency={currency} token={token} />
         <Center>
           <Text fontSize="xs">
             <Link color="teal.500" href="https://www.exchangerate-api.com/">
-              Get your free API key here!
+              Click here to get a <strong>free</strong> API key
             </Link>
           </Text>
         </Center>
