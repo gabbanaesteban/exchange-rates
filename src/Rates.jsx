@@ -1,34 +1,61 @@
 import React, { useEffect, useState } from "react"
-import { Table, Thead, Tbody, Tr, Th, Td } from "@chakra-ui/react"
+import { Table, Thead, Tbody, Tr, Th, Td, Spinner, Center } from "@chakra-ui/react"
 
-function Rates({ currencies, selectedCurrency, token, ...props }) {
-  const [rates, setRates] = useState([])
+function Rates({ currencies, selectedCurrency, token }) {
+  const [state, setState] = useState({
+    isLoading: false,
+    rates: [],
+    error: null,
+  })
 
   useEffect(() => {
     if (!selectedCurrency || !token) {
       return
     }
 
-    getRates().then(({ conversion_rates: conversionRates }) => {
-      const rates = currencies
-        .filter((currency) => currency !== selectedCurrency)
-        .map((currency) => {
-          return { currency, value: conversionRates[currency] }
-        })
-      setRates(rates)
-    })
+    setState({ isLoading: true })
+
+    getRates()
+      .then((data) => {
+        data.result === "success"
+          ? setState({ isLoading: false, rates: composeRates(data) })
+          : setState({ isLoading: false, error: new Error(data["error-type"]) })
+      })
+      .catch((error) => setState({ isLoading: false, error }))
   }, [selectedCurrency, token])
 
   function getRates() {
     return window
-      .fetch(
-        `https://v6.exchangerate-api.com/v6/${token}/latest/${selectedCurrency}`
-      )
+      .fetch(`https://v6.exchangerate-api.com/v6/${token}/latest/${selectedCurrency}`)
       .then((response) => response.json())
   }
 
+  function composeRates(data) {
+    const { conversion_rates: conversionRates } = data
+
+    return currencies
+      .filter((currency) => currency !== selectedCurrency)
+      .map((currency) => {
+        return { currency, value: conversionRates[currency] }
+      })
+  }
+
+  const { isLoading, rates, error } = state
+
+  if (isLoading) {
+    return (
+      <Center>
+        <Spinner thickness="4px" speed="0.65s" emptyColor="gray.200" color="blue.500" size="xl" />
+      </Center>
+    )
+  }
+
+  if (error) {
+    throw error
+  }
+
   return (
-    <Table variant="simple" mb={3}>
+    <Table variant="simple">
       <Thead>
         <Tr>
           <Th>Flag</Th>
@@ -41,9 +68,7 @@ function Rates({ currencies, selectedCurrency, token, ...props }) {
           return (
             <Tr key={currency}>
               <Td>
-                <div
-                  className={`currency-flag currency-flag-${currency.toLowerCase()}`}
-                ></div>
+                <div className={`currency-flag currency-flag-${currency.toLowerCase()}`}></div>
               </Td>
               <Td>{currency}</Td>
               <Td isNumeric>{value}</Td>
